@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LoginForm.css'; // Archivo CSS para estilos específicos
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,6 +18,7 @@ const LoginForm: React.FC = () => {
 
     console.log('Iniciando sesión con:', { email, password });
     setError('');
+    navigate('/dashboard'); // Redirige al dashboard
   };
 
   return (
