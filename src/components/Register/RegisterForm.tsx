@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './RegisterForm.css'; // Archivo CSS para estilos específicos
 
 const RegisterForm: React.FC = () => {
@@ -8,6 +9,8 @@ const RegisterForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState(''); // Estado para el mensaje de éxito
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +27,12 @@ const RegisterForm: React.FC = () => {
 
     console.log('Registrando usuario:', { firstName, lastName, email, password });
     setError('');
+    setSuccessMessage('¡Registro exitoso! Redirigiendo inicio de sesión...');
+    
+    // Redirige después de 2 segundos
+    setTimeout(() => {
+      navigate('/');
+    }, 2000);
   };
 
   return (
@@ -34,6 +43,7 @@ const RegisterForm: React.FC = () => {
       <div className="register-card">
         <h2>Crear Cuenta</h2>
         {error && <p className="error">{error}</p>}
+        {successMessage && <p className="success">{successMessage}</p>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="firstName">Nombre</label>

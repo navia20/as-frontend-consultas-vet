@@ -116,14 +116,11 @@ body {
   margin-bottom: 15px;
   font-size: 14px;
   font-weight: bold;
-  animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.success {
+  color: green;
+  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: bold;
 }

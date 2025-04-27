@@ -15,20 +15,8 @@ body {
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  opacity: 0; /* Inicialmente invisible */
-  transform: translateY(20px); /* Desplazamiento inicial */
-  animation: fadeIn 0.5s ease-out forwards; /* Animación de aparición */
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px); /* Comienza desplazado hacia abajo */
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0); /* Termina en su posición original */
-  }
+  opacity: 1; /* Siempre visible */
+  transform: translateY(0); /* Sin desplazamiento */
 }
 
 .login-left {
@@ -116,7 +104,6 @@ body {
 
 .btn-login:hover {
   background-color: #7898b8;
-  
 }
 
 .register-link {
@@ -137,8 +124,17 @@ body {
 
 .error {
   color: red;
-  margin-bottom: 15px;
   font-size: 14px;
   font-weight: bold;
-  animation: fadeIn 0.3s ease;
+  margin-bottom: 10px;
+  min-height: 20px; /* Reserva espacio para el mensaje */
+  visibility: hidden; /* Oculta el mensaje sin eliminarlo del flujo */
+}
+
+.error:empty {
+  visibility: hidden; /* Asegura que el espacio esté reservado cuando no hay texto */
+}
+
+.error:not(:empty) {
+  visibility: visible; /* Muestra el mensaje cuando tiene contenido */
 }
