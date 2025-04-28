@@ -1,0 +1,94 @@
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: #e7e7e7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.reservation-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  min-height: 100vh;
+}
+
+.reservation-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 40px 32px;
+  min-width: 350px;
+  max-width: 400px;
+  margin: 32px auto;
+  text-align: center;
+}
+
+.reservation-card h2 {
+  margin-bottom: 24px;
+  color: #333;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.reservation-form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.reservation-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+}
+
+.reservation-form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.reservation-form-group input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+.reservation-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.reservation-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.reservation-error {
+  color: red;
+  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.reservation-success {
+  color: green;
+  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: bold;
+}
