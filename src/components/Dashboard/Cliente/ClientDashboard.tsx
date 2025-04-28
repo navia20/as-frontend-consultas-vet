@@ -151,12 +151,7 @@ const ClientDashboard: React.FC = () => {
               </label>
               <label>
                 Correo:
-                <input
-                  type="email"
-                  name="email"
-                  value={tempClientData.email}
-                  onChange={handleInputChange}
-                />
+                <p className="readonly-field">{tempClientData.email}</p> {/* Campo solo lectura */}
               </label>
               <label>
                 Teléfono:

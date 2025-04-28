@@ -18,7 +18,7 @@ const LoginForm: React.FC = () => {
 
     console.log('Iniciando sesión con:', { email, password });
     setError('');
-    navigate('/dashboard'); // Redirige al dashboard
+    navigate('/client'); // Redirige al dashboard
   };
 
   return (
