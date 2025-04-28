@@ -1,4 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useCrearAppointment } from "./useCrearAppointment";
+
+const appointmentSchema = z.object({
+  fecha_hora: z.string().min(1, "La fecha y hora son obligatorias"),
+  mascota_nombre: z.string().min(1, "El nombre de la mascota es obligatorio"),
+  observaciones: z.string().optional(),
+});
+
+type AppointmentFormInputs = z.infer<typeof appointmentSchema>;
 
 interface AppointmentFormProps {
   onSuccess: (msg: string) => void;
@@ -11,91 +23,69 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   onError,
   onClose,
 }) => {
-  const [appointmentData, setAppointmentData] = useState({
-    fecha: "",
-    hora: "",
-    mascota_nombre: "",
-    observaciones: "",
+  const { crearAppointment, loading, error, success } = useCrearAppointment();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<AppointmentFormInputs>({
+    resolver: zodResolver(appointmentSchema),
+    mode: "onTouched",
   });
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setAppointmentData({ ...appointmentData, [name]: value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (
-      !appointmentData.fecha ||
-      !appointmentData.hora ||
-      !appointmentData.mascota_nombre
-    ) {
-      onError("Por favor, completa todos los campos obligatorios.");
-      return;
-    }
-    setSubmitting(true);
+  const onSubmit = async (data: AppointmentFormInputs) => {
     try {
-      // Aquí iría la llamada real a la API
-      // await api.agendarCita(appointmentData);
-      setTimeout(() => {
-        setSubmitting(false);
-        onSuccess("¡Cita agendada con éxito!");
-        onClose();
-      }, 800);
-    } catch (error) {
-      setSubmitting(false);
+      await crearAppointment(data);
+      onSuccess("¡Cita agendada con éxito!");
+      reset();
+      onClose();
+    } catch (e) {
       onError("Error al agendar la cita. Inténtalo más tarde.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <label>
-        Fecha:
+        Fecha y Hora:
         <input
-          type="date"
-          name="fecha"
-          value={appointmentData.fecha}
-          onChange={handleInputChange}
-          required
+          type="datetime-local"
+          {...register("fecha_hora")}
+          disabled={loading}
         />
-      </label>
-      <label>
-        Hora:
-        <input
-          type="time"
-          name="hora"
-          value={appointmentData.hora}
-          onChange={handleInputChange}
-          required
-        />
+        {errors.fecha_hora && (
+          <span className="error">{errors.fecha_hora.message}</span>
+        )}
       </label>
       <label>
         Nombre de la Mascota:
         <input
           type="text"
-          name="mascota_nombre"
-          value={appointmentData.mascota_nombre}
-          onChange={handleInputChange}
+          {...register("mascota_nombre")}
           placeholder="Nombre de la mascota"
-          required
+          disabled={loading}
         />
+        {errors.mascota_nombre && (
+          <span className="error">{errors.mascota_nombre.message}</span>
+        )}
       </label>
       <label>
         Observaciones:
         <textarea
-          name="observaciones"
-          value={appointmentData.observaciones}
-          onChange={handleInputChange}
+          {...register("observaciones")}
           placeholder="Escribe alguna observación (opcional)"
+          disabled={loading}
         />
+        {errors.observaciones && (
+          <span className="error">{errors.observaciones.message}</span>
+        )}
       </label>
-      <button type="submit" className="dashboard-button" disabled={submitting}>
-        {submitting ? "Agendando..." : "Confirmar"}
+      <button type="submit" className="dashboard-button" disabled={loading}>
+        {loading ? "Agendando..." : "Confirmar"}
       </button>
+      {error && <div className="error">{error}</div>}
+      {success && <div className="success">{success}</div>}
     </form>
   );
 };
