@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { REGISTER_MUTATION } from './Register.mutations';
 import './RegisterForm.css'; // Archivo CSS para estilos específicos
+
+
 
 const RegisterForm: React.FC = () => {
   const [firstName, setFirstName] = useState('');
@@ -14,7 +17,6 @@ const RegisterForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setError('Por favor, completa todos los campos.');
       return;
@@ -26,12 +28,13 @@ const RegisterForm: React.FC = () => {
     }
 
     console.log('Registrando usuario:', { firstName, lastName, email, password });
+    console.log(REGISTER_MUTATION); // Verifica si la mutación se está importando correctamente
     setError('');
     setSuccessMessage('¡Registro exitoso! Redirigiendo inicio de sesión...');
     
     // Redirige después de 2 segundos
     setTimeout(() => {
-      navigate('/');
+      //loginClientenavigate('/');
     }, 2000);
   };
 
