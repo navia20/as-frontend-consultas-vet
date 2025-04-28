@@ -1,109 +1,148 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './LoginForm.css'; // Archivo CSS para estilos específicos
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useLoginCliente } from "./useLogin";
+import { saveClienteToLocalStorage } from "../../utils/localStorageCliente";
+import "./LoginForm.css";
+
+const loginSchema = z.object({
+  email: z.string().email("Correo inválido"),
+  password: z.string().min(1, "La contraseña es obligatoria"),
+});
+
+type LoginFormInputs = z.infer<typeof loginSchema>;
 
 const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isForgotPasswordVisible, setIsForgotPasswordVisible] = useState(false); // Estado para mostrar el modal
-  const [step, setStep] = useState(1); // Paso del flujo de recuperación
-  const [recoveryEmail, setRecoveryEmail] = useState('');
-  const [recoveryCode, setRecoveryCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
+  const { loginCliente, loading, error, success } = useLoginCliente();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormInputs>({
+    resolver: zodResolver(loginSchema),
+    mode: "onTouched",
+  });
 
-  // Función para validar el formato del correo
+  // Modal y recuperación de contraseña (sin cambios)
+  const [isForgotPasswordVisible, setIsForgotPasswordVisible] =
+    React.useState(false);
+  const [step, setStep] = React.useState(1);
+  const [recoveryEmail, setRecoveryEmail] = React.useState("");
+  const [recoveryCode, setRecoveryCode] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [modalError, setModalError] = React.useState("");
+
+  const onSubmit = async (data: LoginFormInputs) => {
+    console.log("[Login] Datos enviados desde el formulario:", data);
+    try {
+      const response = await loginCliente({
+        email: data.email,
+        password: data.password,
+      });
+      console.log("[Login] Respuesta exitosa:", response);
+      saveClienteToLocalStorage(
+        {
+          id: response.cliente.id,
+          nombre: response.cliente.nombre,
+          email: data.email,
+        },
+        response.access_token
+      );
+      navigate("/client");
+    } catch (e) {
+      console.log("[Login] Error al iniciar sesión:", e);
+    }
+  };
+
+  // Funciones de recuperación de contraseña (sin cambios, solo usan modalError)
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      setError('Completa todos los campos.');
-      return;
-    }
-
-    console.log('Iniciando sesión con:', { email, password });
-    setError('');
-    navigate('/client'); // Redirige al dashboard
-  };
-
   const handleForgotPassword = () => {
     setIsForgotPasswordVisible(true);
-    setStep(1); // Reinicia el flujo al primer paso
+    setStep(1);
+    setModalError("");
   };
-
   const handleSendRecoveryEmail = () => {
     if (!recoveryEmail) {
-      setError('Por favor, ingresa tu correo.');
+      setModalError("Por favor, ingresa tu correo.");
       return;
     }
     if (!isValidEmail(recoveryEmail)) {
-      setError('Por favor, ingresa un correo válido.');
+      setModalError("Por favor, ingresa un correo válido.");
       return;
     }
-    console.log('Enviando código de recuperación a:', recoveryEmail);
-    setError('');
-    setStep(2); // Avanza al siguiente paso
+    console.log("Enviando código de recuperación a:", recoveryEmail);
+    setModalError("");
+    setStep(2);
   };
-
   const handleValidateCode = () => {
     if (!recoveryCode) {
-      setError('Por favor, ingresa el código de recuperación.');
+      setModalError("Por favor, ingresa el código de recuperación.");
       return;
     }
-    console.log('Validando código:', recoveryCode);
-    setError('');
-    setStep(3); // Avanza al siguiente paso
+    console.log("Validando código:", recoveryCode);
+    setModalError("");
+    setStep(3);
   };
-
   const handleResetPassword = () => {
     if (!newPassword || !confirmPassword) {
-      setError('Por favor, completa todos los campos.');
+      setModalError("Por favor, completa todos los campos.");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setModalError("Las contraseñas no coinciden.");
       return;
     }
-    console.log('Restableciendo contraseña a:', newPassword);
-    setError('');
-    setIsForgotPasswordVisible(false); // Cierra el modal
+    console.log("Restableciendo contraseña a:", newPassword);
+    setModalError("");
+    setIsForgotPasswordVisible(false);
   };
 
   return (
     <div className="login-container">
       <div className="login-left">
-        <img src="../assets/Felino-jugando.jpg" alt="Felino jugando" className="login-image" />
+        <img
+          src="../assets/Felino-jugando.jpg"
+          alt="Felino jugando"
+          className="login-image"
+        />
       </div>
       <div className="login-card">
         <h2>Iniciar Sesión</h2>
         {error && <p className="error">{error}</p>}
-        <form onSubmit={handleSubmit}>
+        {success && <p className="success">{success}</p>}
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register("email")}
               placeholder="Ingresa tu correo"
+              disabled={loading}
             />
+            {errors.email && (
+              <span className="error">{errors.email.message}</span>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="password">Contraseña</label>
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...register("password")}
               placeholder="Ingresa tu contraseña"
+              disabled={loading}
             />
+            {errors.password && (
+              <span className="error">{errors.password.message}</span>
+            )}
           </div>
           <div className="form-options">
             <label>
@@ -113,18 +152,22 @@ const LoginForm: React.FC = () => {
               ¿Olvidaste tu contraseña?
             </a>
           </div>
-          <button type="submit" className="btn-login">Iniciar Sesión</button>
+          <button type="submit" className="btn-login" disabled={loading}>
+            {loading ? "Iniciando..." : "Iniciar Sesión"}
+          </button>
         </form>
         <p className="register-link">
           ¿No tienes una cuenta? <a href="/register">Regístrate aquí</a>
         </p>
       </div>
-
       {/* Modal para recuperación de contraseña */}
       {isForgotPasswordVisible && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <button className="modal-close-button" onClick={() => setIsForgotPasswordVisible(false)}>
+            <button
+              className="modal-close-button"
+              onClick={() => setIsForgotPasswordVisible(false)}
+            >
               &times;
             </button>
             {step === 1 && (
@@ -137,6 +180,7 @@ const LoginForm: React.FC = () => {
                   onChange={(e) => setRecoveryEmail(e.target.value)}
                   placeholder="Ingresa tu correo"
                 />
+                {modalError && <p className="error">{modalError}</p>}
                 <button onClick={handleSendRecoveryEmail} className="btn-login">
                   Enviar Código
                 </button>
@@ -152,6 +196,7 @@ const LoginForm: React.FC = () => {
                   onChange={(e) => setRecoveryCode(e.target.value)}
                   placeholder="Ingresa el código"
                 />
+                {modalError && <p className="error">{modalError}</p>}
                 <button onClick={handleValidateCode} className="btn-login">
                   Validar Código
                 </button>
@@ -173,6 +218,7 @@ const LoginForm: React.FC = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repite la nueva contraseña"
                 />
+                {modalError && <p className="error">{modalError}</p>}
                 <button onClick={handleResetPassword} className="btn-login">
                   Restablecer Contraseña
                 </button>

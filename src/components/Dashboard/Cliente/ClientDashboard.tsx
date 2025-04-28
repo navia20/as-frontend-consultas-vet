@@ -1,25 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
-import './ClientDashboard.css'; // Archivo CSS para estilos específicos
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Importa useNavigate
+import "./ClientDashboard.css"; // Archivo CSS para estilos específicos
+import AppointmentForm from "./AppointmentForm";
+
+const getClienteFromLocalStorage = () => {
+  return {
+    name: localStorage.getItem("cliente_nombre") || "",
+    email: localStorage.getItem("cliente_email") || "",
+    phone: "", // Puedes agregar teléfono si lo guardas en localStorage
+    address: "", // Puedes agregar dirección si lo guardas en localStorage
+    id: localStorage.getItem("cliente_id") || "",
+  };
+};
 
 const ClientDashboard: React.FC = () => {
   const navigate = useNavigate(); // Hook para redirigir
-  const [clientData, setClientData] = useState({
-    name: 'Juan Pérez',
-    email: 'juan.perez@example.com',
-    phone: '123-456-7890',
-    address: 'Calle Falsa 123, Ciudad, País',
-  });
+  const [clientData, setClientData] = useState(getClienteFromLocalStorage());
   const [tempClientData, setTempClientData] = useState(clientData); // Estado temporal para edición
   const [isEditing, setIsEditing] = useState(false); // Estado para alternar entre vista y edición
   const [appointmentData, setAppointmentData] = useState({
-    fecha: '',
-    hora: '',
-    mascota_nombre: '',
-    observaciones: '',
+    fecha: "",
+    hora: "",
+    mascota_nombre: "",
+    observaciones: "",
   });
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   interface Cita {
     fecha_hora: string;
     mascota_nombre: string;
@@ -29,11 +35,12 @@ const ClientDashboard: React.FC = () => {
 
   const [historial, setHistorial] = useState<Cita[]>([]); // Estado para almacenar el historial
   const [isModalVisible, setIsModalVisible] = useState(false); // Controla si el modal está visible
-  const [isAppointmentModalVisible, setIsAppointmentModalVisible] = useState(false); // Modal para agendar cita
+  const [isAppointmentModalVisible, setIsAppointmentModalVisible] =
+    useState(false); // Modal para agendar cita
 
   const handleLogout = () => {
-    console.log('Cerrando sesión...');
-    navigate('/'); // Redirige al usuario a la página de inicio de sesión
+    console.log("Cerrando sesión...");
+    navigate("/"); // Redirige al usuario a la página de inicio de sesión
   };
 
   const handleEditToggle = () => {
@@ -41,7 +48,9 @@ const ClientDashboard: React.FC = () => {
     setTempClientData(clientData); // Sincroniza los datos actuales con el estado temporal
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setTempClientData({ ...tempClientData, [name]: value }); // Actualiza los datos temporales
     setAppointmentData({ ...appointmentData, [name]: value });
@@ -50,43 +59,52 @@ const ClientDashboard: React.FC = () => {
   const handleSave = () => {
     setClientData(tempClientData); // Guarda los datos editados
     setIsEditing(false); // Salir del modo de edición
-    console.log('Datos guardados:', tempClientData);
+    console.log("Datos guardados:", tempClientData);
   };
 
   const handleScheduleAppointment = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!appointmentData.fecha || !appointmentData.hora || !appointmentData.mascota_nombre) {
-      setErrorMessage('Por favor, completa todos los campos obligatorios.');
+    if (
+      !appointmentData.fecha ||
+      !appointmentData.hora ||
+      !appointmentData.mascota_nombre
+    ) {
+      setErrorMessage("Por favor, completa todos los campos obligatorios.");
       return;
     }
 
-    console.log('Agendando cita con los datos:', appointmentData);
+    console.log("Agendando cita con los datos:", appointmentData);
 
     // Simulación de éxito
-    setSuccessMessage('¡Cita agendada con éxito!');
-    setErrorMessage('');
-    setAppointmentData({ fecha: '', hora: '', mascota_nombre: '', observaciones: '' });
+    setSuccessMessage("¡Cita agendada con éxito!");
+    setErrorMessage("");
+    setAppointmentData({
+      fecha: "",
+      hora: "",
+      mascota_nombre: "",
+      observaciones: "",
+    });
     setIsAppointmentModalVisible(false); // Cierra el modal después de agendar
   };
 
   // Función para obtener el historial desde el backend
   const fetchHistorial = async () => {
     try {
-      const response = await fetch('/api/historial'); // Cambia la URL según tu backend
+      const response = await fetch("/api/historial"); // Cambia la URL según tu backend
       const data = await response.json();
       setHistorial(data);
-      setErrorMessage('');
+      setErrorMessage("");
     } catch (error) {
-      console.error('Error al obtener el historial:', error);
-      setErrorMessage('No se pudo cargar el historial. Inténtalo más tarde.');
+      console.error("Error al obtener el historial:", error);
+      setErrorMessage("No se pudo cargar el historial. Inténtalo más tarde.");
     }
   };
 
   // Maneja la apertura del modal
   const openModal = () => {
-    setErrorMessage(''); // Limpia el mensaje de error
-    setSuccessMessage(''); // Limpia el mensaje de éxito
+    setErrorMessage(""); // Limpia el mensaje de error
+    setSuccessMessage(""); // Limpia el mensaje de éxito
     setIsModalVisible(true); // Abre el modal
   };
 
@@ -97,26 +115,26 @@ const ClientDashboard: React.FC = () => {
 
   const openHistorialModal = async () => {
     try {
-      setErrorMessage(''); // Limpia mensajes previos
-      setSuccessMessage(''); // Limpia mensajes previos
+      setErrorMessage(""); // Limpia mensajes previos
+      setSuccessMessage(""); // Limpia mensajes previos
 
       // Obtiene el historial desde el backend
-      const response = await fetch('/api/historial');
+      const response = await fetch("/api/historial");
       const data = await response.json();
 
       setHistorial(data); // Almacena el historial en el estado
       setIsModalVisible(true); // Abre el modal
     } catch (error) {
-      console.error('Error al obtener el historial:', error);
-      setErrorMessage('No se pudo cargar el historial. Inténtalo más tarde.');
+      console.error("Error al obtener el historial:", error);
+      setErrorMessage("No se pudo cargar el historial. Inténtalo más tarde.");
       setIsModalVisible(true); // Abre el modal para mostrar el error
     }
   };
 
   // Maneja la apertura del modal de agendar cita
   const openAppointmentModal = () => {
-    setErrorMessage(''); // Limpia el mensaje de error
-    setSuccessMessage(''); // Limpia el mensaje de éxito
+    setErrorMessage(""); // Limpia el mensaje de error
+    setSuccessMessage(""); // Limpia el mensaje de éxito
     setIsAppointmentModalVisible(true); // Abre el modal
   };
 
@@ -125,6 +143,10 @@ const ClientDashboard: React.FC = () => {
     setIsAppointmentModalVisible(false);
   };
 
+  useEffect(() => {
+    setClientData(getClienteFromLocalStorage());
+  }, []);
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
@@ -132,7 +154,7 @@ const ClientDashboard: React.FC = () => {
           <img src="/assets/Logo.png" alt="Logo" className="logo" />
           <h1>Clinica Capa 8</h1>
         </div>
-        <button className="logout-button" onClick={() => navigate('/')}>
+        <button className="logout-button" onClick={() => navigate("/")}>
           Cerrar Sesión
         </button>
       </header>
@@ -152,7 +174,8 @@ const ClientDashboard: React.FC = () => {
               </label>
               <label>
                 Correo:
-                <p className="readonly-field">{tempClientData.email}</p> {/* Campo solo lectura */}
+                <p className="readonly-field">{tempClientData.email}</p>{" "}
+                {/* Campo solo lectura */}
               </label>
               <label>
                 Teléfono:
@@ -181,10 +204,18 @@ const ClientDashboard: React.FC = () => {
             </div>
           ) : (
             <div>
-              <p><strong>Nombre:</strong> {clientData.name}</p>
-              <p><strong>Correo:</strong> {clientData.email}</p>
-              <p><strong>Teléfono:</strong> {clientData.phone}</p>
-              <p><strong>Dirección:</strong> {clientData.address}</p>
+              <p>
+                <strong>Nombre:</strong> {clientData.name}
+              </p>
+              <p>
+                <strong>Correo:</strong> {clientData.email}
+              </p>
+              <p>
+                <strong>Teléfono:</strong> {clientData.phone}
+              </p>
+              <p>
+                <strong>Dirección:</strong> {clientData.address}
+              </p>
               <button className="dashboard-button" onClick={handleEditToggle}>
                 Editar
               </button>
@@ -209,69 +240,26 @@ const ClientDashboard: React.FC = () => {
       {isAppointmentModalVisible && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <button className="modal-close-button" onClick={closeAppointmentModal}>
+            <button
+              className="modal-close-button"
+              onClick={closeAppointmentModal}
+            >
               &times;
             </button>
             <h2>Agendar Cita</h2>
             {errorMessage && <p className="error">{errorMessage}</p>}
             {successMessage && <p className="success">{successMessage}</p>}
-            <form onSubmit={handleScheduleAppointment}>
-              <label>
-                Fecha:
-                <input
-                  type="date"
-                  name="fecha"
-                  value={appointmentData.fecha}
-                  onChange={(e) =>
-                    setAppointmentData({ ...appointmentData, fecha: e.target.value })
-                  }
-                  required
-                />
-              </label>
-              <label>
-                Hora:
-                <input
-                  type="time"
-                  name="hora"
-                  value={appointmentData.hora}
-                  onChange={(e) => {
-                    // Asegurar que los minutos sean siempre ":00"
-                    const valor = e.target.value;
-                    const horaSinMinutos = valor.slice(0, 2) + ':00';
-                    setAppointmentData({ ...appointmentData, hora: horaSinMinutos });
-                  }}
-                  step="3600" // Permite seleccionar solo horas en punto
-                  required
-                />
-              </label>
-              <label>
-                Nombre de la Mascota:
-                <input
-                  type="text"
-                  name="mascota_nombre"
-                  value={appointmentData.mascota_nombre}
-                  onChange={(e) =>
-                    setAppointmentData({ ...appointmentData, mascota_nombre: e.target.value })
-                  }
-                  placeholder="Nombre de la mascota"
-                  required
-                />
-              </label>
-              <label>
-                Observaciones:
-                <textarea
-                  name="observaciones"
-                  value={appointmentData.observaciones}
-                  onChange={(e) =>
-                    setAppointmentData({ ...appointmentData, observaciones: e.target.value })
-                  }
-                  placeholder="Escribe alguna observación (opcional)"
-                />
-              </label>
-              <button type="submit" className="dashboard-button">
-                Confirmar
-              </button>
-            </form>
+            <AppointmentForm
+              onSuccess={(msg) => {
+                setSuccessMessage(msg);
+                setErrorMessage("");
+              }}
+              onError={(msg) => {
+                setErrorMessage(msg);
+                setSuccessMessage("");
+              }}
+              onClose={closeAppointmentModal}
+            />
           </div>
         </div>
       )}
@@ -323,6 +311,3 @@ const ClientDashboard: React.FC = () => {
 };
 
 export default ClientDashboard;
-
-
-

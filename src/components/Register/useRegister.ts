@@ -7,6 +7,7 @@ interface RegisterVariables {
   email: string;
   password: string;
   telefono: string;
+  direccion: string;
 }
 
 interface RegisterResponse {
@@ -19,14 +20,6 @@ interface RegisterResponse {
     };
   };
 }
-
-const variables = {
-    nombre: "Charqui",
-    email: "gabozx1@alumnos.ucn.cl",
-    password: "secret123",
-    telefono: "12345678",
-  };
-  
 
 export function useRegisterCliente() {
   const [loading, setLoading] = useState(false);
