@@ -13,7 +13,8 @@ const ClientDashboard: React.FC = () => {
   const [tempClientData, setTempClientData] = useState(clientData); // Estado temporal para edición
   const [isEditing, setIsEditing] = useState(false); // Estado para alternar entre vista y edición
   const [appointmentData, setAppointmentData] = useState({
-    fecha_hora: '',
+    fecha: '',
+    hora: '',
     mascota_nombre: '',
     observaciones: '',
   });
@@ -55,7 +56,7 @@ const ClientDashboard: React.FC = () => {
   const handleScheduleAppointment = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!appointmentData.fecha_hora || !appointmentData.mascota_nombre) {
+    if (!appointmentData.fecha || !appointmentData.hora || !appointmentData.mascota_nombre) {
       setErrorMessage('Por favor, completa todos los campos obligatorios.');
       return;
     }
@@ -65,7 +66,7 @@ const ClientDashboard: React.FC = () => {
     // Simulación de éxito
     setSuccessMessage('¡Cita agendada con éxito!');
     setErrorMessage('');
-    setAppointmentData({ fecha_hora: '', mascota_nombre: '', observaciones: '' });
+    setAppointmentData({ fecha: '', hora: '', mascota_nombre: '', observaciones: '' });
     setIsAppointmentModalVisible(false); // Cierra el modal después de agendar
   };
 
@@ -216,14 +217,30 @@ const ClientDashboard: React.FC = () => {
             {successMessage && <p className="success">{successMessage}</p>}
             <form onSubmit={handleScheduleAppointment}>
               <label>
-                Fecha y Hora:
+                Fecha:
                 <input
-                  type="datetime-local"
-                  name="fecha_hora"
-                  value={appointmentData.fecha_hora}
+                  type="date"
+                  name="fecha"
+                  value={appointmentData.fecha}
                   onChange={(e) =>
-                    setAppointmentData({ ...appointmentData, fecha_hora: e.target.value })
+                    setAppointmentData({ ...appointmentData, fecha: e.target.value })
                   }
+                  required
+                />
+              </label>
+              <label>
+                Hora:
+                <input
+                  type="time"
+                  name="hora"
+                  value={appointmentData.hora}
+                  onChange={(e) => {
+                    // Asegurar que los minutos sean siempre ":00"
+                    const valor = e.target.value;
+                    const horaSinMinutos = valor.slice(0, 2) + ':00';
+                    setAppointmentData({ ...appointmentData, hora: horaSinMinutos });
+                  }}
+                  step="3600" // Permite seleccionar solo horas en punto
                   required
                 />
               </label>
@@ -279,14 +296,20 @@ const ClientDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {historial.map((cita, index) => (
-                    <tr key={index}>
-                      <td>{cita.fecha_hora}</td>
-                      <td>{cita.mascota_nombre}</td>
-                      <td>{cita.estado}</td>
-                      <td>{cita.observaciones}</td>
-                    </tr>
-                  ))}
+                  {historial.map((cita, index) => {
+                    // Formatear la fecha para mostrar solo la hora en punto
+                    const fechaHora = new Date(cita.fecha_hora);
+                    const fechaFormateada = `${fechaHora.toLocaleDateString()} ${fechaHora.getHours()}:00`;
+
+                    return (
+                      <tr key={index}>
+                        <td>{fechaFormateada}</td>
+                        <td>{cita.mascota_nombre}</td>
+                        <td>{cita.estado}</td>
+                        <td>{cita.observaciones}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (

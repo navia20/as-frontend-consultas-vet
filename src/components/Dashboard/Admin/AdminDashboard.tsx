@@ -3,14 +3,18 @@ import './AdminDashboard.css'; // Archivo CSS para estilos específicos
 
 const AdminDashboard: React.FC = () => {
   const [reservas, setReservas] = useState<any[]>([]); // Estado para las reservas
-  const [usuarios, setUsuarios] = useState<any[]>([]); // Estado para los usuarios
-  const [errorMessage, setErrorMessage] = useState('');
-  const [selectedUsuario, setSelectedUsuario] = useState<any>(null); // Usuario seleccionado para editar
-  const [isUserEditModalVisible, setIsUserEditModalVisible] = useState(false); // Modal para editar usuarios
-  const [medicos, setMedicos] = useState([]); // Estado para los médicos
+  const [medicos, setMedicos] = useState<{ id: string; nombre: string; disponibilidad: string; email: string; telefono: string }[]>([]); // Estado para los médicos
+  const [newMedico, setNewMedico] = useState({
+    nombre: '',
+    disponibilidad: 'Disponible', // Valor predeterminado
+    email: '',
+    telefono: '',
+  }); // Estado para el nuevo veterinario
   const [selectedReserva, setSelectedReserva] = useState<any>(null); // Reserva seleccionada para asignar médico
   const [isAssignModalVisible, setIsAssignModalVisible] = useState(false); // Modal para asignar médico
   const [selectedMedico, setSelectedMedico] = useState(''); // Médico seleccionado
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Función para obtener las reservas desde el backend
   const fetchReservas = async () => {
@@ -25,19 +29,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Función para obtener los usuarios
-  const fetchUsuarios = async () => {
-    try {
-      const response = await fetch('/api/usuarios');
-      const data = await response.json();
-      setUsuarios(data);
-      setErrorMessage('');
-    } catch (error) {
-      console.error('Error al obtener los usuarios:', error);
-      setErrorMessage('No se pudo cargar los usuarios. Inténtalo más tarde.');
-    }
-  };
-
   // Función para obtener los médicos
   const fetchMedicos = async () => {
     try {
@@ -49,65 +40,34 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Función para registrar un nuevo veterinario
+  const handleRegisterMedico = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('/api/medicos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMedico),
+      });
+      if (response.ok) {
+        const medico = await response.json();
+        setMedicos([...medicos, medico]); // Agregar el nuevo médico a la lista
+        setSuccessMessage('Veterinario registrado con éxito.');
+        setNewMedico({ nombre: '', disponibilidad: '', email: '', telefono: '' }); // Limpiar el formulario
+      } else {
+        setErrorMessage('No se pudo registrar el veterinario.');
+      }
+    } catch (error) {
+      console.error('Error al registrar el veterinario:', error);
+      setErrorMessage('No se pudo registrar el veterinario.');
+    }
+  };
+
   // Cargar datos al montar el componente
   useEffect(() => {
     fetchReservas();
-    fetchUsuarios();
     fetchMedicos();
   }, []);
-
-  // Función para eliminar un usuario
-  const deleteUsuario = async (id: number) => {
-    try {
-      const response = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        setUsuarios(usuarios.filter((usuario: any) => usuario.id !== id));
-      } else {
-        setErrorMessage('No se pudo eliminar el usuario.');
-      }
-    } catch (error) {
-      console.error('Error al eliminar el usuario:', error);
-      setErrorMessage('No se pudo eliminar el usuario.');
-    }
-  };
-
-  // Función para abrir el modal de edición de usuario
-  const openUserEditModal = (usuario: any) => {
-    setSelectedUsuario(usuario);
-    setIsUserEditModalVisible(true);
-  };
-
-  // Función para cerrar el modal de edición de usuario
-  const closeUserEditModal = () => {
-    setSelectedUsuario(null);
-    setIsUserEditModalVisible(false);
-  };
-
-  // Función para actualizar un usuario
-  const updateUsuario = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`/api/usuarios/${selectedUsuario.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedUsuario),
-      });
-      if (response.ok) {
-        const updatedUsuario = await response.json();
-        setUsuarios(
-          usuarios.map((usuario: any) =>
-            usuario.id === updatedUsuario.id ? updatedUsuario : usuario
-          )
-        );
-        closeUserEditModal();
-      } else {
-        setErrorMessage('No se pudo actualizar el usuario.');
-      }
-    } catch (error) {
-      console.error('Error al actualizar el usuario:', error);
-      setErrorMessage('No se pudo actualizar el usuario.');
-    }
-  };
 
   // Función para abrir el modal de asignación
   const openAssignModal = (reserva: any) => {
@@ -153,8 +113,43 @@ const AdminDashboard: React.FC = () => {
         <h1>Panel de Administración</h1>
       </header>
       <main className="admin-dashboard-main">
-        <h2>Reservas</h2>
+        <h2>Registrar Veterinario</h2>
         {errorMessage && <p className="error">{errorMessage}</p>}
+        {successMessage && <p className="success">{successMessage}</p>}
+        <form onSubmit={handleRegisterMedico} className="register-form">
+          <label>
+            Nombre:
+            <input
+              type="text"
+              value={newMedico.nombre}
+              onChange={(e) => setNewMedico({ ...newMedico, nombre: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Email:
+            <input
+              type="email"
+              value={newMedico.email}
+              onChange={(e) => setNewMedico({ ...newMedico, email: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Teléfono:
+            <input
+              type="text"
+              value={newMedico.telefono}
+              onChange={(e) => setNewMedico({ ...newMedico, telefono: e.target.value })}
+              required
+            />
+          </label>
+          <button type="submit" className="save-button">
+            Registrar
+          </button>
+        </form>
+
+        <h2>Reservas</h2>
         {reservas.length > 0 ? (    
           <table className="reservas-table">
             <thead>
@@ -192,107 +187,7 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <p>No hay reservas registradas.</p>
         )}
-
-        <h2>Usuarios Registrados</h2>
-        {usuarios.length > 0 ? (
-          <table className="usuarios-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((usuario: any, index: number) => (
-                <tr key={index}>
-                  <td>{usuario.nombre}</td>
-                  <td>{usuario.email}</td>
-                  <td>{usuario.rol}</td>
-                  <td>
-                    <button
-                      className="edit-button"
-                      onClick={() => openUserEditModal(usuario)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="delete-button"
-                      onClick={() => deleteUsuario(usuario.id)}
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No hay usuarios registrados.</p>
-        )}
       </main>
-
-      {/* Modal para editar usuario */}
-      {isUserEditModalVisible && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="modal-close-button" onClick={closeUserEditModal}>
-              &times;
-            </button>
-            <h2>Editar Usuario</h2>
-            <form onSubmit={updateUsuario}>
-              <label>
-                Nombre:
-                <input
-                  type="text"
-                  value={selectedUsuario.nombre}
-                  onChange={(e) =>
-                    setSelectedUsuario({
-                      ...selectedUsuario,
-                      nombre: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </label>
-              <label>
-                Email:
-                <input
-                  type="email"
-                  value={selectedUsuario.email}
-                  onChange={(e) =>
-                    setSelectedUsuario({
-                      ...selectedUsuario,
-                      email: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </label>
-              <label>
-                Rol:
-                <select
-                  value={selectedUsuario.rol}
-                  onChange={(e) =>
-                    setSelectedUsuario({
-                      ...selectedUsuario,
-                      rol: e.target.value,
-                    })
-                  }
-                  required
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="Cliente">Cliente</option>
-                </select>
-              </label>
-              <button type="submit" className="save-button">
-                Guardar
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Modal para asignar médico */}
       {isAssignModalVisible && (
