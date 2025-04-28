@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GraphQLClient, gql } from "graphql-request";
 import { useVeterinarios } from "./useVeterinarios";
+import { useCrearReserva } from "./useCrearReserva";
 import "./ReservationForm.css";
 
 const schema = z.object({
@@ -13,35 +12,14 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const client = new GraphQLClient("http://localhost:8000/graphiql"); // Cambia la URL según tu backend
-
-const mutation = gql`
-  mutation CrearReserva(
-    $cliente_id: Int!
-    $veterinario_id: Int!
-    $horario: String!
-  ) {
-    crearReserva(
-      cliente_id: $cliente_id
-      veterinario_id: $veterinario_id
-      horario: $horario
-    ) {
-      id
-      horario
-      cliente {
-        id
-        nombre
-      }
-      veterinario {
-        id
-        nombre
-      }
-    }
-  }
-`;
-
 const ReservationForm = () => {
   const { veterinarios, loading, error: fetchError } = useVeterinarios();
+  const {
+    crearReserva,
+    loading: creating,
+    error: createError,
+    success,
+  } = useCrearReserva();
 
   const {
     register,
@@ -54,23 +32,13 @@ const ReservationForm = () => {
   const onSubmit = async (data: FormData) => {
     try {
       const cliente_id = Number(localStorage.getItem("cliente_id"));
-      const variables = {
-        ...data,
+      await crearReserva({
         cliente_id,
         veterinario_id: Number(data.veterinario_id),
-      };
-      console.log(variables);
-      const response = await client.request<{
-        crearReserva: {
-          id: number;
-          horario: string;
-          cliente: { id: number; nombre: string };
-          veterinario: { id: number; nombre: string };
-        };
-      }>(mutation, variables);
-      alert("Reserva creada: " + JSON.stringify(response.crearReserva));
+        horario: data.horario,
+      });
     } catch (error) {
-      alert("Error al crear reserva: " + error);
+      // El error ya se maneja en el hook
     }
   };
 
@@ -79,12 +47,14 @@ const ReservationForm = () => {
       <div className="reservation-card">
         <h2>Reservar Sesión</h2>
         {fetchError && <div className="reservation-error">{fetchError}</div>}
+        {createError && <div className="reservation-error">{createError}</div>}
+        {success && <div className="reservation-success">{success}</div>}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="reservation-form-group">
             <label>Veterinario</label>
             <select
               {...register("veterinario_id", { valueAsNumber: true })}
-              disabled={loading}
+              disabled={loading || creating}
             >
               <option value="">Seleccione un veterinario</option>
               {veterinarios.map((vet) => (
@@ -101,7 +71,11 @@ const ReservationForm = () => {
           </div>
           <div className="reservation-form-group">
             <label>Horario</label>
-            <input type="datetime-local" {...register("horario")} />
+            <input
+              type="datetime-local"
+              {...register("horario")}
+              disabled={creating}
+            />
             {errors.horario && (
               <span className="reservation-error">
                 {errors.horario.message}
@@ -111,9 +85,9 @@ const ReservationForm = () => {
           <button
             className="reservation-btn"
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || creating}
           >
-            Reservar
+            {creating ? "Reservando..." : "Reservar"}
           </button>
         </form>
       </div>
